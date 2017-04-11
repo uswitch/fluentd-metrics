@@ -89,8 +89,8 @@ func main() {
 			}
 			if i.OutputPlugin && i.Type != "null" {
 				c.Gauge("buffer_queue_len", i.BufferQueueLen, tags, 1)
-				c.Gauge("buffer_total_queued_size", i.BufferQueueLen, tags, 1)
-				c.Gauge("retry_count", i.BufferQueueLen, tags, 1)
+				c.Gauge("buffer_total_queued_size", i.BufferTotalQueueSize, tags, 1)
+				c.Gauge("retry_count", i.RetryCount, tags, 1)
 			}
 		}
 		<-ticker
