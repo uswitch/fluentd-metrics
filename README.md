@@ -1,5 +1,7 @@
 # fluentd-metrics
 
+Unfortunately fluentd only seems to offer up metrics based on its output buffer statuses.  So that's what we've got.
+
     usage: fluentd-metrics --statsd=STATSD --cluster=CLUSTER [<flags>]
 
     Flags:
