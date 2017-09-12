@@ -110,7 +110,9 @@ func main() {
 	// Ticker & Main Loop
 	for {
 		err = publishMetrics(cfg, statsdClient)
-		log.Warnf("Error: %s", err)
+		if err != nil {
+			log.Errorf("error forwarding metrics to statsd: %s", err)
+		}
 		time.Sleep(*interval)
 	}
 }
