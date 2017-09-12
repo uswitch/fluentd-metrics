@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -54,6 +55,35 @@ func getMetrics(URL string) (*fluentStats, error) {
 	return &fs, nil
 }
 
+type config struct {
+	fluentURL   *url.URL
+	hostname    string
+	clusterName string
+}
+
+func publishMetrics(c *config, statsd *statsd.Client) error {
+	fs, err := getMetrics(fmt.Sprintf("%s/api/plugins.json", c.fluentURL))
+	if err != nil {
+		return err
+	}
+
+	for _, i := range fs.Plugins {
+		tags := []string{
+			fmt.Sprintf("nodename:%s", c.hostname),
+			fmt.Sprintf("kube_cluster:%s", c.clusterName),
+			fmt.Sprintf("plugin_id:%s", i.PluginID),
+			fmt.Sprintf("plugin_type:%s", i.Type),
+		}
+		if i.OutputPlugin && i.Type != "null" {
+			statsd.Gauge("buffer_queue_len", i.BufferQueueLen, tags, 1)
+			statsd.Gauge("buffer_total_queued_size", i.BufferTotalQueueSize, tags, 1)
+			statsd.Gauge("retry_count", i.RetryCount, tags, 1)
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	kingpin.Parse()
 
@@ -64,35 +94,23 @@ func main() {
 
 	// Statds Client
 	log.Infof("Starting a buffered datadog statsd client at: %s", *statsdAddr)
-	c, err := statsd.NewBuffered(*statsdAddr, buflen)
+	statsdClient, err := statsd.NewBuffered(*statsdAddr, buflen)
 	if err != nil {
 		log.Fatalf("Error starting statsd client: %s", err)
 	}
-	c.Namespace = namespace
-	defer c.Close()
+	statsdClient.Namespace = namespace
+	defer statsdClient.Close()
+
+	cfg := &config{
+		fluentURL:   *fluentURL,
+		hostname:    hostname,
+		clusterName: *clusterName,
+	}
 
 	// Ticker & Main Loop
-	ticker := time.Tick(*interval)
 	for {
-		fs, err := getMetrics(fmt.Sprintf("%s/api/plugins.json", *fluentURL))
-		if err != nil {
-			log.Warnf("Error: %s", err)
-			<-ticker
-			continue
-		}
-		for _, i := range fs.Plugins {
-			tags := []string{
-				fmt.Sprintf("nodename:%s", hostname),
-				fmt.Sprintf("kube_cluster:%s", *clusterName),
-				fmt.Sprintf("plugin_id:%s", i.PluginID),
-				fmt.Sprintf("plugin_type:%s", i.Type),
-			}
-			if i.OutputPlugin && i.Type != "null" {
-				c.Gauge("buffer_queue_len", i.BufferQueueLen, tags, 1)
-				c.Gauge("buffer_total_queued_size", i.BufferTotalQueueSize, tags, 1)
-				c.Gauge("retry_count", i.RetryCount, tags, 1)
-			}
-		}
-		<-ticker
+		err = publishMetrics(cfg, statsdClient)
+		log.Warnf("Error: %s", err)
+		time.Sleep(*interval)
 	}
 }
