@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "H81ychKdf/QaBpBVEt2RN7qYg6Q=",
+			"checksumSHA1": "mYXO8s/vu7+guTlxQxhDHsh/E/c=",
 			"path": "github.com/DataDog/datadog-go/statsd",
-			"revision": "6fa3e39b86f8cbb638a971f2a90b9ebd98074c6b",
-			"revisionTime": "2017-01-25T16:43:18Z"
+			"revision": "c74bd0589c83817c93e4eff39ccae69d6c46df9b",
+			"revisionTime": "2017-09-05T09:56:32Z"
 		},
 		{
 			"checksumSHA1": "htjvdG/znrHmFYRQBqA2vHrJsF4=",
@@ -31,6 +31,10 @@
 			"path": "github.com/alecthomas/units",
 			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
 			"revisionTime": "2015-10-22T06:55:26Z"
+		},
+		{
+			"path": "github.com/datadog-go/statsd",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "SeYI7DRWrd0Ku+CLavuwIz3EEmQ=",
